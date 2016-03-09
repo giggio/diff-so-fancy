@@ -7,9 +7,7 @@ use File::Basename;
 my $remove_file_add_header    = 1;
 my $remove_file_delete_header = 1;
 my $clean_permission_changes  = 1;
-my $change_hunk_indicators    = 1;
-my $strip_leading_indicators  = 1;
-my $mark_empty_lines          = 1;
+my $change_hunk_indicators    = git_config_boolean("diff-so-fancy.changeHunkIndicators","true");
 
 #################################################################################
 
@@ -150,6 +148,9 @@ sub mark_empty_lines {
 sub clean_up_input {
 	my $input_array_ref = shift();
 
+	my $strip_leading_indicators = git_config_boolean("diff-so-fancy.stripLeadingSymbols","true");
+	my $mark_empty_lines         = git_config_boolean("diff-so-fancy.markEmptyLines","true");
+
 	# Usually the first line of a diff is whitespace so we remove that
 	strip_empty_first_line($input_array_ref);
 
@@ -166,8 +167,68 @@ sub clean_up_input {
 	return 1;
 }
 
+sub boolean {
+	my $str = shift();
+	$str    = trim($str);
+
+	if ($str eq "" || $str =~ /^(no|false|0)$/i) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+# Fetch a textual item from the git config
+sub git_config_boolean {
+	my $search_key    = lc(shift());
+	my $default_value = lc(shift()) // 0; # default to false
+
+	my $cmd = "git config --list";
+	my @out = `$cmd`;
+
+	my $raw = {};
+	foreach my $line (@out) {
+		my ($key,$value) = split("=",$line,2);
+		$value =~ s/\s+$//;
+
+		$raw->{$key} = $value;
+	}
+
+	# If we're given a search key return that, else build a hash
+	if ($search_key) {
+		my $ret = $raw->{$search_key} // $default_value;
+		$ret = boolean($ret);
+
+		return $ret;
+	}
+}
+
+# Fetch a textual item from the git config
+sub git_config {
+	my $search_key    = lc(shift());
+	my $default_value = lc(shift());
+
+	my $cmd = "git config --list";
+	my @out = `$cmd`;
+
+	my $raw = {};
+	foreach my $line (@out) {
+		my ($key,$value) = split("=",$line,2);
+		$value =~ s/\s+$//;
+
+		$raw->{$key} = $value;
+	}
+
+	# If we're given a search key return that, else build a hash
+	if ($search_key) {
+		return $raw->{$search_key} // $default_value;
+	} else {
+		return $raw;
+	}
+}
+
 # Return git config as a hash
-sub get_git_config {
+sub get_git_config_hash {
 	my $cmd = "git config --list";
 	my @out = `$cmd`;
 
@@ -253,4 +314,12 @@ sub bleach_text {
 	$str    =~ s/\e\[\d*(;\d+)*m//mg;
 
 	return $str;
+}
+
+sub trim {
+	my $s = shift();
+	if (!$s) { return ""; }
+	$s =~ s/^\s*|\s*$//g;
+
+	return $s;
 }
