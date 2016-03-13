@@ -198,38 +198,16 @@ sub boolean {
 }
 
 # Fetch a textual item from the git config
-sub git_config_item {
-	my $search_key    = lc(shift());
-	my $default_value = lc(shift()) // 0; # default to false
-
-	my $cmd = "git config --list";
-	my @out = `$cmd`;
-
-	my $raw = {};
-	foreach my $line (@out) {
-		my ($key,$value) = split("=",$line,2);
-		$value =~ s/\s+$//;
-
-		$raw->{$key} = $value;
-	}
-
-	# If we're given a search key return that, else build a hash
-	if ($search_key) {
-		my $ret = $raw->{$search_key} // $default_value;
-		$ret = boolean($ret);
-
-		return $ret;
-	}
-
-	return $raw;
-}
-
-# Fetch a textual item from the git config
 sub git_config {
 	my $search_key    = lc($_[0] // "");
 	my $default_value = lc($_[1] // "");
 
 	my $out = git_config_raw();
+
+	# If we're in a unit test, use the default (don't read the users config)
+	if (in_unit_test()) {
+		return $default_value;
+	}
 
 	my $raw = {};
 	foreach my $line (@$out) {
@@ -239,7 +217,7 @@ sub git_config {
 		$raw->{$key} = $value;
 	}
 
-	# If we're given a search key return that, else build a hash
+	# If we're given a search key return that, else return the hash
 	if ($search_key) {
 		return $raw->{$search_key} // $default_value;
 	} else {
