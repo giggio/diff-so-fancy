@@ -178,48 +178,41 @@ sub boolean {
 	}
 }
 
-# Fetch a textual item from the git config
-sub git_config_boolean {
-	my $search_key    = lc(shift());
-	my $default_value = lc(shift()) // 0; # default to false
+# Memoize getting the git config
+{
+	my $static_config;
 
-	my $cmd = "git config --list";
-	my @out = `$cmd`;
+	sub git_config_raw {
+		if ($static_config) {
+			# If we already have the config return that
+			return $static_config;
+		}
 
-	my $raw = {};
-	foreach my $line (@out) {
-		my ($key,$value) = split("=",$line,2);
-		$value =~ s/\s+$//;
+		my $cmd = "git config --list";
+		my @out = `$cmd`;
 
-		$raw->{$key} = $value;
-	}
+		$static_config = \@out;
 
-	# If we're given a search key return that, else build a hash
-	if ($search_key) {
-		my $ret = $raw->{$search_key} // $default_value;
-		$ret = boolean($ret);
-
-		return $ret;
+		return \@out;
 	}
 }
 
 # Fetch a textual item from the git config
 sub git_config {
-	my $search_key    = lc(shift());
-	my $default_value = lc(shift());
+	my $search_key    = lc($_[0] // "");
+	my $default_value = lc($_[1] // "");
 
-	my $cmd = "git config --list";
-	my @out = `$cmd`;
+	my $out = git_config_raw();
 
 	my $raw = {};
-	foreach my $line (@out) {
+	foreach my $line (@$out) {
 		my ($key,$value) = split("=",$line,2);
 		$value =~ s/\s+$//;
 
 		$raw->{$key} = $value;
 	}
 
-	# If we're given a search key return that, else build a hash
+	# If we're given a search key return that, else return the hash
 	if ($search_key) {
 		return $raw->{$search_key} // $default_value;
 	} else {
@@ -227,13 +220,23 @@ sub git_config {
 	}
 }
 
+# Fetch a boolean item from the git config
+sub git_config_boolean {
+	my $search_key    = lc($_[0] // "");
+	my $default_value = lc($_[1] // 0); # Default to false
+
+	my $result = git_config($search_key,$default_value);
+	my $ret    = boolean($result);
+
+	return $ret;
+}
+
 # Return git config as a hash
 sub get_git_config_hash {
-	my $cmd = "git config --list";
-	my @out = `$cmd`;
+	my $out = git_config_raw();
 
 	my %hash;
-	foreach my $line (@out) {
+	foreach my $line (@$out) {
 		my ($key,$value) = split("=",$line,2);
 		$value =~ s/\s+$//;
 		my @path = split(/\./,$key);
