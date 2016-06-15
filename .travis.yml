@@ -12,7 +12,8 @@ before_install:
       sudo apt-get -y install shellcheck;
     fi
 install:
-  - "cpanm --quiet --notest Test::Perl::Critic Perl::Critic::Freenode"
+  - "cpanm --quiet --notest Test::Perl::Critic"
+  - "cpanm --quiet --notest Perl::Critic::Freenode"
 script:
   - ./bats/bin/bats test/*.bats
   - shellcheck diff-so-fancy update-deps.sh
