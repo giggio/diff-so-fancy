@@ -31,16 +31,25 @@ my $columns_to_remove = 0;
 my $line_num          = 0;
 my $in_hunk           = 0;
 my $patch_mode        = 0;
+my $debug             = 1;
+my $debug_out;
 
 # If --patch-mode is set at the CLI we add extra \n for line count
 if ($args =~ /--patch-mode/) {
 	$patch_mode = 1;
 }
 
+if ($debug) {
+	open($debug_out,">","/tmp/diff_so_fancy_debug.txt");
+}
+
 my ($file_1,$file_2);
 my $last_file_seen = "";
 
 while (my $line = <STDIN>) {
+	if ($debug) {
+		print $debug_out $line;
+	}
 
 	######################################################
 	# Pre-process the line before we do any other markup #
@@ -79,11 +88,18 @@ while (my $line = <STDIN>) {
 
 		# Find the second file on the next line: +++ b/README.md
 		my $next = <STDIN>;
-		$next    =~ /^$ansi_color_regex\+\+\+ (\w\/)?(.+?)(\e|\t|$)/;
+		if ($debug) {
+			print $debug_out $next;
+		}
+
+		$next =~ /^$ansi_color_regex\+\+\+ (\w\/)?(.+?)(\e|\t|$)/;
+
 		if ($1) {
 			print $1; # Print out whatever color we're using
 		}
+
 		$file_2 = $5;
+
 		if ($file_2 ne "/dev/null") {
 			$last_file_seen = $file_2;
 		}
@@ -142,6 +158,10 @@ while (my $line = <STDIN>) {
 	} elsif ($clean_permission_changes && $line =~ /^${ansi_color_regex}old mode (\d+)/) {
 		my ($old_mode) = $4;
 		my $next = <STDIN>;
+
+		if ($debug) {
+			print $debug_out $next;
+		}
 
 		if ($1) {
 			print $1; # Print out whatever color we're using
