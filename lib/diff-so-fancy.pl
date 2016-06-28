@@ -51,6 +51,8 @@ while (my $line = <STDIN>) {
 		print $debug_out $line;
 	}
 
+	print $line; next;
+
 	######################################################
 	# Pre-process the line before we do any other markup #
 	######################################################
