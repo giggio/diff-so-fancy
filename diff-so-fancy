@@ -583,4 +583,4 @@ sub is_windows {
 	}
 }
 
-# vim: tabstop=4 shiftwidth=4 expandtab autoindent softtabstop=4
+# vim: tabstop=4 shiftwidth=4 autoindent softtabstop=4
