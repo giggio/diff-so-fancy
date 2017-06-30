@@ -47,7 +47,7 @@ my $white = color("15bold");
 my $reset = color();
 
 if (!$exit) {
-	print "${good}Success:${reset} Wrote of diff-so-fancy ${vers}v$dsf_version${reset} to $output_file ($size bytes)\n";
+	print "${good}Success:${reset} Wrote diff-so-fancy ${vers}v$dsf_version${reset} to $output_file ($size bytes)\n";
 	chmod 0755,$output_file; # Make the output executable
 } else {
 	print "${bad}Error  :${reset} Fatpack failed to build $output_file with exit code: ${warn}$exit${reset}\n";
