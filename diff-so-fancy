@@ -55,7 +55,7 @@ my $ansi_color_regex = qr/(\e\[([0-9]{1,3}(;[0-9]{1,3}){0,3})[mK])?/;
 my $dim_magenta      = "\e[38;5;146m";
 my $reset_color      = "\e[0m";
 my $bold             = "\e[1m";
-my $horizontal_color = DiffHighlight::color_config('color.diff.meta',"\e[38;5;227m");
+my $horizontal_color = "";
 
 my ($file_1,$file_2);
 my $last_file_seen    = "";
@@ -192,6 +192,9 @@ while (my $line = shift(@input)) {
 		my ($file2) = $next =~ /rename to (.+)/;
 
 		if ($file1 && $file2) {
+			# We may not have extracted this yet, so we pull from the config if not
+			$horizontal_color ||= DiffHighlight::color_config('color.diff.meta',"\e[38;5;227m");
+
 			my $change = file_change_string($file1,$file2);
 
 			print horizontal_rule($horizontal_color);
