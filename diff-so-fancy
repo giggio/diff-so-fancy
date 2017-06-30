@@ -499,7 +499,7 @@ sub file_change_string {
 		$old =~ s/(\e0?\[m)/$1$meta_color/g;
 		$new =~ s/(\e0?\[m)/$1$meta_color/g;
 
-		return "renamed:$reset_color $old to $new";
+		return "renamed: $old to $new";
 	# Something we haven't thought of yet
 	} else {
 		return "$file_1 -> $file_2";
